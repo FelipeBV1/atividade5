@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Simples</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        margin: 0;
+        background-color: #f4f4f4;
+      }
+      .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: white;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-bottom: 1px solid #ccc;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .message {
+        max-width: 70%;
+        padding: 12px;
+        border-radius: 10px;
+        background-color: #dcf8c6;
+        margin-bottom: 10px;
+        word-wrap: break-word;
+        display: inline-block;
+        clear: both;
+      }
+      .message.bot {
+        background-color: #f1f1f1;
+        align-self: flex-start;
+      }
+      .message.user {
+        background-color: #dcf8c6;
+        align-self: flex-end;
+      }
+      .form-container {
+        padding: 15px;
+        background-color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid #ccc;
+      }
+      .form-container select,
+      .form-container textarea {
+        margin-right: 10px;
+        border-radius: 5px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        width: 150px;
+      }
+      .form-container textarea {
+        flex-grow: 1;
+        resize: none;
+        max-width: 70%;
+      }
+      .form-container button {
+        padding: 10px 15px;
+        border-radius: 5px;
+        background-color: #25d366;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .form-container button:hover {
+        background-color: #128c7e;
+      }
+      .back-button {
+        padding: 8px 12px;
+        margin-left: 10px;
+        background-color: #ff5722;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .back-button:hover {
+        background-color: #e64a19;
+      }
+      .form-container .buttons {
+        display: flex;
+        gap: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="messages" id="chatBody"></div>
+
+      <div class="form-container">
+        <form action="/enviarMsg" method="post" style="width: 100%; display: flex; justify-content: space-between; gap: 10px;">
+          <select id="messageSelect" name="messageSelect" required style="flex: 0 1 20%;"></select>
+          <textarea
+            id="messageText"
+            rows="2"
+            cols="30"
+            placeholder="Digite sua mensagem..."
+            required
+            name="messageText"
+            style="flex: 1; resize: none;"></textarea>
+          <div class="buttons">
+            <button type="submit">Enviar</button>
+            <button type="button" class="back-button" onclick="window.location.href='/menu';">Voltar ao Menu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function carregarUsuarios() {
+        fetch("/usuarios")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data, "data");
+            loadOptions(data);
+          })
+          .catch((error) =>
+            console.error("Erro ao carregar os usuários:", error)
+          );
+      }
+
+      function carregarMsg() {
+        fetch("/mensagens")
+          .then((response) => response.json())
+          .then((data) => {
+            const chatBody = document.getElementById("chatBody");
+            chatBody.innerHTML = "";
+            console.log(data, "data");
+            data.forEach((item) => {
+              const msg = document.createElement("div");
+              const isUserMessage = item.messageSelect === "Você"; // Exemplo de condição
+              msg.classList.add("message");
+              msg.classList.add(isUserMessage ? "user" : "bot");
+              msg.innerHTML = `<div>
+                <strong>${item.messageSelect}</strong><br/>
+                ${item.messageText}
+                <small style="font-size: 0.75em; color: gray;">${item.horario}</small>
+              </div>`;
+              chatBody.appendChild(msg);
+            });
+          })
+          .catch((error) =>
+            console.error("Erro ao carregar as mensagens:", error)
+          );
+      }
+
+      const loadOptions = (data) => {
+        const selectElement = document.getElementById("messageSelect");
+        data.forEach((option) => {
+          const optionElement = document.createElement("option");
+          optionElement.value = option.nickName;
+          optionElement.textContent = option.nickName;
+          selectElement.appendChild(optionElement);
+        });
+      };
+
+      window.onload = () => {
+        carregarUsuarios();
+        carregarMsg();
+      };
+    </script>
+  </body>
+</html>
